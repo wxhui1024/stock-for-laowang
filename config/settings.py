@@ -16,7 +16,11 @@ DATA_SOURCE = os.getenv("DATA_SOURCE", "ashare")  # ashare, tushare, akshare
 WATCHLIST = [
     "000001.XSHG",  # 上证指数
     "399001.XSHE",  # 深证成指
-    # 添加您关注的股票
+    "002050.XSHE",  # 三花智控
+    "603087.XSHG",  # 甘李药业
+    "600089.XSHG",  # 特变电工
+    "600845.XSHG",  # 宝信软件
+    "600592.XSHG",  # 龙溪股份
 ]
 
 # 策略参数

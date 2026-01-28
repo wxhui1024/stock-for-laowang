@@ -205,6 +205,16 @@ class StockAnalysisSystem:
 # 创建全局系统实例
 stock_system = StockAnalysisSystem()
 
+def run_web_interface():
+    """运行Web界面"""
+    from web.app import run_web_app
+    run_web_app()
+
 if __name__ == "__main__":
-    # 如果直接运行此脚本，则启动系统
-    stock_system.run()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--web":
+        # 如果传入 --web 参数，则启动Web界面
+        run_web_interface()
+    else:
+        # 否则启动原来的监控系统
+        stock_system.run()

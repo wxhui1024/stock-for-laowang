@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老王股票分析系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stock-card {
+            transition: transform 0.2s;
+        }
+        .stock-card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-add {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-remove {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg header-bg">
+        <div class="container">
+            <a class="navbar-brand text-white" href="/">老王股票分析系统</a>
+            <div class="navbar-nav">
+                <a class="nav-link text-white" href="/dashboard">数据看板</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 左侧：股票添加和监控列表 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">添加监控股票</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="addStockForm">
+                            <div class="mb-3">
+                                <label for="stockSymbol" class="form-label">股票代码</label>
+                                <input type="text" class="form-control" id="stockSymbol" placeholder="例如: 000001.XSHG">
+                                <div class="form-text">请输入完整的股票代码（含交易所后缀）</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="stockName" class="form-label">股票名称（可选）</label>
+                                <input type="text" class="form-control" id="stockName" placeholder="例如: 上证指数">
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">添加到监控列表</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">监控列表</h5>
+                        <span class="badge bg-light text-dark" id="watchlistCount">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush" id="watchlist">
+                            <!-- 动态加载监控列表 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：股票数据显示 -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">股票数据分析</h5>
+                        <button class="btn btn-sm btn-outline-light" id="refreshData">刷新数据</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <select class="form-select" id="selectedStock">
+                                <option value="">请选择要查看的股票</option>
+                                <!-- 动态加载选项 -->
+                            </select>
+                        </div>
+                        <div id="chartContainer">
+                            <canvas id="stockChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">AI分析结果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button class="btn btn-warning" id="analyzeBtn">AI分析选中股票</button>
+                        </div>
+                        <div id="analysisResult" class="border rounded p-3" style="min-height: 200px;">
+                            <p class="text-muted">点击"AI分析选中股票"按钮获取分析结果</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let watchlist = [];
+        let selectedStock = '';
+        let chart = null;
+
+        // DOM加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWatchlist();
+            setupEventListeners();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 添加股票表单提交
+            document.getElementById('addStockForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addStockToList();
+            });
+
+            // 刷新数据按钮
+            document.getElementById('refreshData').addEventListener('click', function() {
+                if (selectedStock) {
+                    loadChartData(selectedStock);
+                }
+            });
+
+            // AI分析按钮
+            document.getElementById('analyzeBtn').addEventListener('click', function() {
+                if (selectedStock) {
+                    analyzeStock();
+                } else {
+                    alert('请先选择一只股票');
+                }
+            });
+        }
+
+        // 加载监控列表
+        function loadWatchlist() {
+            fetch('/api/watchlist')
+                .then(response => response.json())
+                .then(data => {
+                    watchlist = data;
+                    updateWatchlistDisplay();
+                    updateSelectedStockOptions();
+                })
+                .catch(error => console.error('Error loading watchlist:', error));
+        }
+
+        // 更新监控列表显示
+        function updateWatchlistDisplay() {
+            const container = document.getElementById('watchlist');
+            container.innerHTML = '';
+
+            document.getElementById('watchlistCount').textContent = watchlist.length;
+
+            watchlist.forEach(symbol => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                
+                const span = document.createElement('span');
+                span.textContent = symbol;
+                
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-danger btn-sm btn-remove';
+                btn.textContent = '删除';
+                btn.onclick = () => removeStockFromList(symbol);
+                
+                li.appendChild(span);
+                li.appendChild(btn);
+                container.appendChild(li);
+            });
+        }
+
+        // 更新选择股票的选项
+        function updateSelectedStockOptions() {
+            const select = document.getElementById('selectedStock');
+            select.innerHTML = '<option value="">请选择要查看的股票</option>';
+            
+            watchlist.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                select.appendChild(option);
+            });
+        }
+
+        // 添加股票到列表
+        function addStockToList() {
+            const symbolInput = document.getElementById('stockSymbol');
+            const nameInput = document.getElementById('stockName');
+            
+            const symbol = symbolInput.value.trim();
+            const name = nameInput.value.trim();
+
+            if (!symbol) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            fetch('/api/watchlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ symbol: symbol, name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    symbolInput.value = '';
+                    nameInput.value = '';
+                    loadWatchlist(); // 重新加载列表
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding stock:', error);
+                alert('添加股票失败');
+            });
+        }
+
+        // 从列表删除股票
+        function removeStockFromList(symbol) {
+            if (confirm(`确定要从监控列表中移除 ${symbol} 吗？`)) {
+                fetch(`/api/watchlist/${symbol}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadWatchlist(); // 重新加载列表
+                        if (selectedStock === symbol) {
+                            selectedStock = '';
+                            document.getElementById('selectedStock').value = '';
+                            clearChart();
+                        }
+                        alert(data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing stock:', error);
+                    alert('删除股票失败');
+                });
+            }
+        }
+
+        // 图表初始化
+        function initChart() {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '收盘价',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载股票图表数据
+        function loadChartData(symbol) {
+            if (!symbol) return;
+            
+            fetch(`/api/stock/${symbol}/data`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('获取股票数据失败: ' + data.error);
+                        return;
+                    }
+                    
+                    if (chart) {
+                        chart.data.labels = data.dates;
+                        chart.data.datasets[0].data = data.close;
+                        chart.update();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading chart data:', error);
+                    alert('加载图表数据失败');
+                });
+        }
+
+        // AI分析股票
+        function analyzeStock() {
+            if (!selectedStock) return;
+            
+            const resultDiv = document.getElementById('analysisResult');
+            resultDiv.innerHTML = '<p class="text-info">正在分析中...</p>';
+            
+            fetch(`/api/stock/${selectedStock}/analyze`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        resultDiv.innerHTML = `<p class="text-danger">分析失败: ${data.error}</p>`;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <h6>AI分析结果:</h6>
+                            <p><strong>股票:</strong> ${data.symbol}</p>
+                            <p><strong>当前价格:</strong> ${data.current_price}</p>
+                            <p><strong>投资建议:</strong> ${data.recommendation}</p>
+                            <div class="mt-3">
+                                <pre class="border p-3 bg-light">${data.analysis.substring(0, 1000)}${data.analysis.length > 1000 ? '...' : ''}</pre>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error analyzing stock:', error);
+                    resultDiv.innerHTML = '<p class="text-danger">分析失败，请稍后重试</p>';
+                });
+        }
+
+        // 清空图表
+        function clearChart() {
+            if (chart) {
+                chart.data.labels = [];
+                chart.data.datasets[0].data = [];
+                chart.update();
+            }
+        }
+
+        // 监听股票选择变化
+        document.getElementById('selectedStock').addEventListener('change', function() {
+            selectedStock = this.value;
+            if (selectedStock) {
+                initChart();
+                loadChartData(selectedStock);
+            } else {
+                clearChart();
+            }
+        });
+
+        // 定期刷新数据（可选）
+        setInterval(function() {
+            // 可以在这里添加定期刷新功能
+        }, 60000); // 每分钟刷新一次
+    </script>
+</body>
+</html>

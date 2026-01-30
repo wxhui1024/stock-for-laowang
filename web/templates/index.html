@@ -3,75 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>老王股票分析系统</title>
+    <title>老王股票分析系统 - TradeView风格</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1e1e1e;
+            --panel-bg: #161c22;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --border-color: #363c4e;
+            --accent-color: #2196f3;
+            --buy-color: #26a69a;
+            --sell-color: #ef5350;
+            --grid-color: #2b2b2b;
+        }
+        
         body {
-            background-color: #f8f9fa;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
+        
+        .navbar {
+            background-color: var(--secondary-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid rgba(0, 0, 0, 0.125);
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
         }
-        .header-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        
+        .card-header {
+            background-color: #2a2f3e;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0 !important;
         }
-        .stock-card {
-            transition: transform 0.2s;
+        
+        .form-control {
+            background-color: #2a2f3e;
+            border: 1px solid #363c4e;
+            color: var(--text-primary);
         }
-        .stock-card:hover {
-            transform: translateY(-5px);
+        
+        .form-control:focus {
+            background-color: #2a2f3e;
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
         }
-        .btn-add {
-            background-color: #28a745;
-            border-color: #28a745;
+        
+        .btn {
+            border-radius: 4px;
         }
-        .btn-remove {
-            background-color: #dc3545;
-            border-color: #dc3545;
+        
+        .btn-success {
+            background-color: var(--buy-color);
+            border-color: var(--buy-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #21969a;
+            border-color: #21969a;
+        }
+        
+        .btn-danger {
+            background-color: var(--sell-color);
+            border-color: var(--sell-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #ef4340;
+            border-color: #ef4340;
+        }
+        
+        .btn-warning {
+            background-color: #ff9800;
+            border-color: #ff9800;
+        }
+        
+        .list-group-item {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .list-group-item:hover {
+            background-color: #2a2f3e;
+        }
+        
+        .bg-primary { background-color: #2a2f3e !important; }
+        .bg-success { background-color: #2a2f3e !important; }
+        .bg-warning { background-color: #2a2f3e !important; }
+        .bg-info { background-color: #2a2f3e !important; }
+        
+        .text-white { color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        
+        .tradeview-chart-container {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 15px;
+            height: 500px;
+            position: relative;
+        }
+        
+        .symbol-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .suggestion-item:hover {
+            background-color: #2a2f3e;
+        }
+        
+        .price-positive { color: var(--buy-color); }
+        .price-negative { color: var(--sell-color); }
+        
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .chart-btn {
+            background: #2a2f3e;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .chart-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg header-bg">
-        <div class="container">
-            <a class="navbar-brand text-white" href="/">老王股票分析系统</a>
-            <div class="navbar-nav">
-                <a class="nav-link text-white" href="/dashboard">数据看板</a>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold" href="/">
+                <i class="fas fa-chart-line me-2"></i>老王股票分析系统
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/dashboard"><i class="fas fa-th-large me-1"></i>数据看板</a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
+    <div class="container-fluid mt-4">
+        <div class="row g-3">
             <!-- 左侧：股票添加和监控列表 -->
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">添加监控股票</h5>
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-plus-circle me-2"></i>添加监控股票</h5>
                     </div>
                     <div class="card-body">
                         <form id="addStockForm">
                             <div class="mb-3">
                                 <label for="stockSymbol" class="form-label">股票代码</label>
-                                <input type="text" class="form-control" id="stockSymbol" placeholder="例如: 000001.XSHG">
-                                <div class="form-text">请输入完整的股票代码（含交易所后缀）</div>
+                                <div class="symbol-input-container">
+                                    <input type="text" class="form-control" id="stockSymbol" placeholder="输入股票代码或名称" autocomplete="off">
+                                    <div class="suggestions-list" id="symbolSuggestions"></div>
+                                </div>
+                                <div class="form-text text-secondary">输入股票代码或名称自动匹配</div>
                             </div>
                             <div class="mb-3">
-                                <label for="stockName" class="form-label">股票名称（可选）</label>
-                                <input type="text" class="form-control" id="stockName" placeholder="例如: 上证指数">
+                                <label for="stockName" class="form-label">股票名称</label>
+                                <input type="text" class="form-control" id="stockName" placeholder="股票名称将自动填充" readonly>
                             </div>
-                            <button type="submit" class="btn btn-success w-100">添加到监控列表</button>
+                            <button type="submit" class="btn btn-success w-100 fw-bold">
+                                <i class="fas fa-star me-2"></i>添加到监控列表
+                            </button>
                         </form>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">监控列表</h5>
-                        <span class="badge bg-light text-dark" id="watchlistCount">0</span>
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>监控列表</h5>
+                        <span class="badge bg-success" id="watchlistCount">0</span>
                     </div>
                     <div class="card-body p-0">
                         <ul class="list-group list-group-flush" id="watchlist">
@@ -82,11 +225,20 @@
             </div>
 
             <!-- 右侧：股票数据显示 -->
-            <div class="col-md-8">
+            <div class="col-md-9">
                 <div class="card mb-4">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">股票数据分析</h5>
-                        <button class="btn btn-sm btn-outline-light" id="refreshData">刷新数据</button>
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-chart-candlestick me-2"></i>股票K线图</h5>
+                        <div class="d-flex gap-2">
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-type="candlestick">K线</button>
+                                <button class="chart-btn" data-type="line">折线</button>
+                                <button class="chart-btn" data-type="area">面积</button>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm" id="refreshData">
+                                <i class="fas fa-sync-alt me-1"></i>刷新
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -95,22 +247,24 @@
                                 <!-- 动态加载选项 -->
                             </select>
                         </div>
-                        <div id="chartContainer">
-                            <canvas id="stockChart" height="300"></canvas>
+                        <div class="tradeview-chart-container">
+                            <canvas id="stockChart"></canvas>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">AI分析结果</h5>
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-robot me-2"></i>AI分析结果</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <button class="btn btn-warning" id="analyzeBtn">AI分析选中股票</button>
+                            <button class="btn btn-warning fw-bold" id="analyzeBtn">
+                                <i class="fas fa-brain me-2"></i>AI分析选中股票
+                            </button>
                         </div>
-                        <div id="analysisResult" class="border rounded p-3" style="min-height: 200px;">
-                            <p class="text-muted">点击"AI分析选中股票"按钮获取分析结果</p>
+                        <div id="analysisResult" class="border rounded p-3" style="min-height: 200px; background-color: #2a2f3e;">
+                            <p class="text-secondary text-center mb-0">点击"AI分析选中股票"按钮获取分析结果</p>
                         </div>
                     </div>
                 </div>
@@ -119,16 +273,247 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
         // 全局变量
         let watchlist = [];
         let selectedStock = '';
         let chart = null;
+        let currentChartType = 'candlestick'; // 默认K线图
+        let stockSuggestions = []; // 存储股票建议列表
+        
+        // 模拟股票代码-名称映射（实际应用中应从API获取）
+        const stockMap = {
+            '000001.XSHG': '上证指数',
+            '399001.XSHE': '深证成指', 
+            '399006.XSHE': '创业板指',
+            '000001.XSHE': '平安银行',
+            '000002.XSHE': '万科A',
+            '600036.XSHG': '招商银行',
+            '601318.XSHG': '中国平安',
+            '600519.XSHG': '贵州茅台',
+            '000858.XSHE': '五粮液',
+            '002304.XSHE': '洋河股份',
+            '000568.XSHE': '泸州老窖',
+            '600887.XSHG': '伊利股份',
+            '601288.XSHG': '农业银行',
+            '601939.XSHG': '建设银行',
+            '601398.XSHG': '工商银行',
+            '601988.XSHG': '中国银行',
+            '601328.XSHG': '交通银行',
+            '601818.XSHG': '光大银行',
+            '601998.XSHG': '中信银行',
+            '601390.XSHG': '中国中铁',
+            '601800.XSHG': '中国交建',
+            '601186.XSHG': '中国铁建',
+            '601766.XSHG': '中国中车',
+            '601899.XSHG': '紫金矿业',
+            '601601.XSHG': '中国太保',
+            '601668.XSHG': '中国建筑',
+            '601166.XSHG': '兴业银行',
+            '601857.XSHG': '中国石油',
+            '601878.XSHG': '浙商证券',
+            '601881.XSHG': '中国银河',
+            '601997.XSHG': '贵阳银行',
+            '601688.XSHG': '华泰证券',
+            '601211.XSHG': '国泰君安',
+            '601600.XSHG': '中国铝业',
+            '601111.XSHG': '中国国航',
+            '601006.XSHG': '大秦铁路',
+            '601088.XSHG': '中国神华',
+            '601866.XSHG': '中远海发',
+            '601872.XSHG': '招商轮船',
+            '601919.XSHG': '中远海控',
+            '601992.XSHG': '金隅集团',
+            '601996.XSHG': '丰林集团',
+            '601999.XSHG': '出版传媒',
+            '600000.XSHG': '浦发银行',
+            '600016.XSHG': '民生银行',
+            '600028.XSHG': '中国石化',
+            '600030.XSHG': '中信证券',
+            '600031.XSHG': '三一重工',
+            '600048.XSHG': '保利发展',
+            '600050.XSHG': '中国联通',
+            '600104.XSHG': '上汽集团',
+            '600111.XSHG': '北方稀土',
+            '600309.XSHG': '万华化学',
+            '600585.XSHG': '海螺水泥',
+            '600809.XSHG': '山西汾酒',
+            '600837.XSHG': '海通证券',
+            '600886.XSHG': '国投电力',
+            '600893.XSHG': '航发动力',
+            '600900.XSHG': '长江电力',
+            '600919.XSHG': '江苏银行',
+            '600926.XSHG': '杭州银行',
+            '600928.XSHG': '西安银行',
+            '600958.XSHG': '东方证券',
+            '600999.XSHG': '招商证券',
+            '601009.XSHG': '南京银行',
+            '601066.XSHG': '中信建投',
+            '601138.XSHG': '工业富联',
+            '601162.XSHG': '天风证券',
+            '601169.XSHG': '北京银行',
+            '601186.XSHG': '中国铁建',
+            '601211.XSHG': '国泰君安',
+            '601216.XSHG': '君正集团',
+            '601225.XSHG': '陕西煤业',
+            '601229.XSHG': '上海银行',
+            '601236.XSHG': '红塔证券',
+            '601238.XSHG': '广汽集团',
+            '601288.XSHG': '农业银行',
+            '601319.XSHG': '中国人保',
+            '601326.XSHG': '秦港股份',
+            '601336.XSHG': '新华保险',
+            '601360.XSHG': '三六零',
+            '601377.XSHG': '兴业证券',
+            '601390.XSHG': '中国中铁',
+            '601398.XSHG': '工商银行',
+            '601555.XSHG': '东吴证券',
+            '601577.XSHG': '长沙银行',
+            '601601.XSHG': '中国太保',
+            '601618.XSHG': '中国中冶',
+            '601628.XSHG': '中国人寿',
+            '601658.XSHG': '邮储银行',
+            '601668.XSHG': '中国建筑',
+            '601669.XSHG': '中国电建',
+            '601688.XSHG': '华泰证券',
+            '601727.XSHG': '上海电气',
+            '601766.XSHG': '中国中车',
+            '601788.XSHG': '光大证券',
+            '601800.XSHG': '中国交建',
+            '601816.XSHG': '京沪高铁',
+            '601838.XSHG': '成都银行',
+            '601857.XSHG': '中国石油',
+            '601877.XSHG': '正泰电器',
+            '601878.XSHG': '浙商证券',
+            '601881.XSHG': '中国银河',
+            '601888.XSHG': '中国国旅',
+            '601898.XSHG': '中煤能源',
+            '601899.XSHG': '紫金矿业',
+            '601916.XSHG': '浙数文化',
+            '601919.XSHG': '中远海控',
+            '601933.XSHG': '永辉超市',
+            '601985.XSHG': '中国核电',
+            '601988.XSHG': '中国银行',
+            '601989.XSHG': '中国重工',
+            '601992.XSHG': '金隅集团',
+            '601997.XSHG': '贵阳银行',
+            '601998.XSHG': '中信银行',
+            '603019.XSHG': '中科曙光',
+            '603160.XSHG': '汇顶科技',
+            '603259.XSHG': '药明康德',
+            '603288.XSHG': '海天味业',
+            '603501.XSHG': '韦尔股份',
+            '603986.XSHG': '兆易创新',
+            '000063.XSHE': '中兴通讯',
+            '000100.XSHE': 'TCL科技',
+            '000157.XSHE': '中联重科',
+            '000333.XSHE': '美的集团',
+            '000538.XSHE': '云南白药',
+            '000596.XSHE': '古井贡酒',
+            '000625.XSHE': '长安汽车',
+            '000651.XSHE': '格力电器',
+            '000703.XSHE': '恒瑞医药',
+            '000723.XSHE': '美锦能源',
+            '000725.XSHE': '京东方A',
+            '000776.XSHE': '广发证券',
+            '000786.XSHE': '北新建材',
+            '000807.XSHE': '云铝股份',
+            '000858.XSHE': '五粮液',
+            '000860.XSHE': '顺鑫农业',
+            '000895.XSHE': '双汇发展',
+            '000938.XSHE': '紫光股份',
+            '000963.XSHE': '华东医药',
+            '000977.XSHE': '浪潮信息',
+            '002001.XSHE': '新和成',
+            '002008.XSHE': '大族激光',
+            '002027.XSHE': '分众传媒',
+            '002044.XSHE': '美年健康',
+            '002049.XSHE': '紫光国微',
+            '002050.XSHE': '三花智控',
+            '002142.XSHE': '宁波银行',
+            '002179.XSHE': '中航光电',
+            '002230.XSHE': '科大讯飞',
+            '002241.XSHE': '歌尔股份',
+            '002271.XSHE': '东方雨虹',
+            '002311.XSHE': '海大集团',
+            '002352.XSHE': '顺丰控股',
+            '002371.XSHE': '北方华创',
+            '002410.XSHE': '广联达',
+            '002415.XSHE': '海康威视',
+            '002422.XSHE': '科伦药业',
+            '002456.XSHE': '欧菲光',
+            '002460.XSHE': '赣锋锂业',
+            '002463.XSHE': '沪电股份',
+            '002466.XSHE': '天齐锂业',
+            '002475.XSHE': '立讯精密',
+            '002493.XSHE': '荣盛石化',
+            '002555.XSHE': '三七互娱',
+            '002557.XSHE': '洽洽食品',
+            '002594.XSHE': '比亚迪',
+            '002602.XSHE': '世纪华通',
+            '002607.XSHE': '中公教育',
+            '002624.XSHE': '完美世界',
+            '002673.XSHE': '西部证券',
+            '002714.XSHE': '牧原股份',
+            '002736.XSHE': '国信证券',
+            '002841.XSHE': '视源股份',
+            '002938.XSHE': '鹏鼎控股',
+            '002945.XSHE': '华林证券',
+            '003816.XSHE': '中国广核',
+            '300014.XSHE': '亿纬锂能',
+            '300015.XSHE': '爱尔眼科',
+            '300033.XSHE': '同花顺',
+            '300059.XSHE': '东方财富',
+            '300122.XSHE': '智飞生物',
+            '300124.XSHE': '汇川技术',
+            '300136.XSHE': '信维通信',
+            '300142.XSHE': '沃森生物',
+            '300144.XSHE': '宋城演艺',
+            '300347.XSHE': '泰格医药',
+            '300408.XSHE': '三环集团',
+            '300413.XSHE': '芒果超媒',
+            '300433.XSHE': '蓝思科技',
+            '300498.XSHE': '温氏股份',
+            '300601.XSHE': '康泰生物',
+            '300628.XSHE': '亿联网络',
+            '300676.XSHE': '华大基因',
+            '300724.XSHE': '捷佳伟创',
+            '300750.XSHE': '宁德时代',
+            '300751.XSHE': '迈为股份',
+            '300760.XSHE': '迈瑞医疗',
+            '300896.XSHE': '爱美客',
+            '300919.XSHE': '中伟股份',
+            '300957.XSHE': '贝泰妮',
+            '301269.XSHE': '华大九天',
+            '301307.XSHE': '美利信',
+            '688005.XSHG': '容百科技',
+            '688008.XSHG': '澜起科技',
+            '688012.XSHG': '中微公司',
+            '688036.XSHG': '传音控股',
+            '688065.XSHG': '凯赛生物',
+            '688082.XSHG': '盛美上海',
+            '688099.XSHG': '晶晨股份',
+            '688111.XSHG': '金山办公',
+            '688169.XSHG': '石头科技',
+            '688187.XSHG': '时代电气',
+            '688256.XSHG': '寒武纪',
+            '688261.XSHG': '东微半导',
+            '688303.XSHG': '大全能源',
+            '688396.XSHG': '华润微',
+            '688516.XSHG': '奥特维',
+            '688533.XSHG': '上声电子',
+            '688599.XSHG': '天合光能',
+            '688981.XSHG': '中芯国际'
+        };
 
         // DOM加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadWatchlist();
             setupEventListeners();
+            
+            // 初始化图表
+            initChart();
         });
 
         // 设置事件监听器
@@ -137,6 +522,20 @@
             document.getElementById('addStockForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addStockToList();
+            });
+
+            // 股票代码输入事件，启用自动完成功能
+            const symbolInput = document.getElementById('stockSymbol');
+            symbolInput.addEventListener('input', function(e) {
+                const input = e.target.value.toUpperCase();
+                showStockSuggestions(input);
+            });
+            
+            // 点击页面其他地方隐藏建议列表
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.symbol-input-container')) {
+                    hideSuggestions();
+                }
             });
 
             // 刷新数据按钮
@@ -154,6 +553,78 @@
                     alert('请先选择一只股票');
                 }
             });
+
+            // 图表类型切换
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentChartType = this.getAttribute('data-type');
+                    if (selectedStock) {
+                        loadChartData(selectedStock);
+                    }
+                });
+            });
+
+            // 监听股票选择变化
+            document.getElementById('selectedStock').addEventListener('change', function() {
+                selectedStock = this.value;
+                if (selectedStock) {
+                    loadChartData(selectedStock);
+                } else {
+                    clearChart();
+                }
+            });
+        }
+
+        // 显示股票建议
+        function showStockSuggestions(input) {
+            const suggestionsContainer = document.getElementById('symbolSuggestions');
+            suggestionsContainer.style.display = 'block';
+            
+            // 清空现有建议
+            suggestionsContainer.innerHTML = '';
+            
+            if (!input) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            // 搜索匹配的股票（代码或名称）
+            let matches = [];
+            for (const [code, name] of Object.entries(stockMap)) {
+                if (code.includes(input) || name.includes(input)) {
+                    matches.push({code, name});
+                    if (matches.length >= 8) break; // 限制显示数量
+                }
+            }
+
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `<strong>${match.code}</strong> - ${match.name}`;
+                    item.onclick = () => selectSuggestion(match.code, match.name);
+                    suggestionsContainer.appendChild(item);
+                });
+            } else {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item text-center text-secondary';
+                item.textContent = '未找到匹配的股票';
+                suggestionsContainer.appendChild(item);
+            }
+        }
+
+        // 隐藏建议列表
+        function hideSuggestions() {
+            document.getElementById('symbolSuggestions').style.display = 'none';
+        }
+
+        // 选择建议项
+        function selectSuggestion(code, name) {
+            document.getElementById('stockSymbol').value = code;
+            document.getElementById('stockName').value = name;
+            hideSuggestions();
         }
 
         // 加载监控列表
@@ -176,18 +647,23 @@
             document.getElementById('watchlistCount').textContent = watchlist.length;
 
             watchlist.forEach(symbol => {
+                const name = stockMap[symbol] || '未知股票';
                 const li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
                 
-                const span = document.createElement('span');
-                span.textContent = symbol;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div><strong>${symbol}</strong></div>
+                    <div class="text-secondary">${name}</div>
+                `;
                 
                 const btn = document.createElement('button');
-                btn.className = 'btn btn-danger btn-sm btn-remove';
-                btn.textContent = '删除';
+                btn.className = 'btn btn-danger btn-sm';
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
+                btn.title = '删除';
                 btn.onclick = () => removeStockFromList(symbol);
                 
-                li.appendChild(span);
+                li.appendChild(div);
                 li.appendChild(btn);
                 container.appendChild(li);
             });
@@ -199,9 +675,10 @@
             select.innerHTML = '<option value="">请选择要查看的股票</option>';
             
             watchlist.forEach(symbol => {
+                const name = stockMap[symbol] || '未知股票';
                 const option = document.createElement('option');
                 option.value = symbol;
-                option.textContent = symbol;
+                option.textContent = `${symbol} - ${name}`;
                 select.appendChild(option);
             });
         }
@@ -232,6 +709,7 @@
                     symbolInput.value = '';
                     nameInput.value = '';
                     loadWatchlist(); // 重新加载列表
+                    updateSelectedStockOptions(); // 更新下拉选项
                     alert(data.message);
                 } else {
                     alert(data.message);
@@ -278,51 +756,240 @@
                 chart.destroy();
             }
             
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '收盘价',
-                        data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false
+            // 根据当前选择的图表类型初始化
+            if (currentChartType === 'candlestick') {
+                // 对于K线图，我们使用柱状图作为替代，因为缺少专门的K线图库
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'K线图',
+                            data: [],
+                            backgroundColor: function(context) {
+                                const index = context.dataIndex;
+                                const dataset = context.dataset;
+                                const value = dataset.data[index];
+                                // 简化处理：使用收盘价与开盘价比较来确定颜色
+                                return 'rgba(38, 166, 154, 0.7)'; // 默认绿色
+                            },
+                            borderColor: function(context) {
+                                const index = context.dataIndex;
+                                const dataset = context.dataset;
+                                const value = dataset.data[index];
+                                return 'rgba(38, 166, 154, 1)';
+                            },
+                            borderWidth: 1,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'var(--text-primary)'
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            } else if (currentChartType === 'line') {
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '价格',
+                            data: [],
+                            borderColor: 'var(--accent-color)',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.1,
+                            pointRadius: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'var(--text-primary)'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else { // area
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '价格',
+                            data: [],
+                            borderColor: 'var(--accent-color)',
+                            backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'var(--grid-color)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-secondary)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'var(--text-primary)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // 加载股票图表数据
         function loadChartData(symbol) {
             if (!symbol) return;
             
+            // 显示加载状态
+            const chartContainer = document.querySelector('.tradeview-chart-container');
+            const originalContent = chartContainer.innerHTML;
+            chartContainer.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <span class="ms-2">正在获取 ${symbol} 的数据...</span>
+                </div>
+            `;
+            
             fetch(`/api/stock/${symbol}/data`)
-                .then(response => response.json())
+                .then(async response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                })
                 .then(data => {
+                    // 恢复原始图表容器
+                    chartContainer.innerHTML = '<canvas id="stockChart"></canvas>';
+                    
                     if (data.error) {
-                        alert('获取股票数据失败: ' + data.error);
+                        // 显示错误信息而不是弹窗
+                        chartContainer.innerHTML = `
+                            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <div>
+                                    获取股票数据失败: ${data.error}
+                                    <br><small class="text-muted">请检查股票代码是否正确，或稍后再试</small>
+                                </div>
+                            </div>
+                        `;
                         return;
                     }
                     
-                    if (chart) {
+                    if (!chart) {
+                        initChart();
+                    }
+                    
+                    // 根据图表类型准备数据
+                    if (currentChartType === 'candlestick') {
+                        // 由于缺少专门的K线图库，我们暂时使用收盘价显示
+                        // 在实际应用中，应该引入chartjs-chart-financial或其他K线图库
                         chart.data.labels = data.dates;
                         chart.data.datasets[0].data = data.close;
-                        chart.update();
+                        chart.options.plugins.title = {
+                            display: true,
+                            text: 'K线图 (当前显示收盘价，完整K线功能需安装额外库)'
+                        };
+                    } else {
+                        // 准备线图或面积图数据
+                        chart.data.labels = data.dates;
+                        chart.data.datasets[0].data = data.close;
+                        if (chart.options.plugins && chart.options.plugins.title) {
+                            delete chart.options.plugins.title;
+                        }
                     }
+                    
+                    chart.update();
                 })
                 .catch(error => {
+                    // 恢复原始图表容器并显示错误
+                    chartContainer.innerHTML = originalContent;
+                    document.getElementById('stockChart').innerHTML = '';
+                    
                     console.error('Error loading chart data:', error);
-                    alert('加载图表数据失败');
+                    chartContainer.innerHTML = `
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <div>
+                                加载图表数据失败
+                                <br><small class="text-muted">${error.message}</small>
+                            </div>
+                        </div>
+                    `;
                 });
         }
 
@@ -331,28 +998,38 @@
             if (!selectedStock) return;
             
             const resultDiv = document.getElementById('analysisResult');
-            resultDiv.innerHTML = '<p class="text-info">正在分析中...</p>';
+            resultDiv.innerHTML = '<p class="text-info text-center mb-0">正在分析中...</p>';
             
             fetch(`/api/stock/${selectedStock}/analyze`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        resultDiv.innerHTML = `<p class="text-danger">分析失败: ${data.error}</p>`;
+                        resultDiv.innerHTML = `<p class="text-danger text-center mb-0">分析失败: ${data.error}</p>`;
                     } else {
                         resultDiv.innerHTML = `
-                            <h6>AI分析结果:</h6>
-                            <p><strong>股票:</strong> ${data.symbol}</p>
-                            <p><strong>当前价格:</strong> ${data.current_price}</p>
-                            <p><strong>投资建议:</strong> ${data.recommendation}</p>
-                            <div class="mt-3">
-                                <pre class="border p-3 bg-light">${data.analysis.substring(0, 1000)}${data.analysis.length > 1000 ? '...' : ''}</pre>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-chart-line me-2"></i>AI分析结果</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>股票:</strong> <span class="text-info">${data.symbol}</span></p>
+                                        <p class="mb-1"><strong>当前价格:</strong> <span class="text-info">¥${data.current_price}</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>投资建议:</strong> <span class="${data.recommendation.includes('买入') ? 'price-positive' : data.recommendation.includes('卖出') ? 'price-negative' : 'text-warning'}">${data.recommendation}</span></p>
+                                        <p class="mb-1"><strong>分析时间:</strong> <span class="text-secondary">${new Date().toLocaleString()}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-top pt-3">
+                                <h6><i class="fas fa-comments me-2"></i>详细分析</h6>
+                                <pre class="border p-3 rounded" style="background-color: var(--secondary-bg); max-height: 300px; overflow-y: auto;">${data.analysis.substring(0, 1000)}${data.analysis.length > 1000 ? '...' : ''}</pre>
                             </div>
                         `;
                     }
                 })
                 .catch(error => {
                     console.error('Error analyzing stock:', error);
-                    resultDiv.innerHTML = '<p class="text-danger">分析失败，请稍后重试</p>';
+                    resultDiv.innerHTML = '<p class="text-danger text-center mb-0">分析失败，请稍后重试</p>';
                 });
         }
 
@@ -364,17 +1041,6 @@
                 chart.update();
             }
         }
-
-        // 监听股票选择变化
-        document.getElementById('selectedStock').addEventListener('change', function() {
-            selectedStock = this.value;
-            if (selectedStock) {
-                initChart();
-                loadChartData(selectedStock);
-            } else {
-                clearChart();
-            }
-        });
 
         // 定期刷新数据（可选）
         setInterval(function() {

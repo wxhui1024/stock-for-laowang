@@ -67,11 +67,11 @@ def get_stock_data(symbol):
             # 转换为JSON格式
             data = {
                 'dates': stock_data.index.strftime('%Y-%m-%d').tolist(),
-                'close': stock_data['close'].tolist(),
-                'open': stock_data['open'].tolist(),
-                'high': stock_data['high'].tolist(),
-                'low': stock_data['low'].tolist(),
-                'volume': stock_data['volume'].tolist() if 'volume' in stock_data.columns else []
+                'close': stock_data['close'].round(2).tolist(),
+                'open': stock_data['open'].round(2).tolist(),
+                'high': stock_data['high'].round(2).tolist(),
+                'low': stock_data['low'].round(2).tolist(),
+                'volume': stock_data['volume'].tolist() if 'volume' in stock_data.columns and stock_data['volume'].notna().any() else []
             }
             return jsonify(data)
         else:
@@ -92,12 +92,15 @@ def analyze_stock(symbol):
 def get_alerts():
     """获取最新警报"""
     # 返回最近的警报
-    recent_alerts = getattr(stock_system.risk_monitor, 'alerts', [])[-10:]
-    return jsonify(recent_alerts)
+    try:
+        recent_alerts = getattr(stock_system.risk_monitor, 'alerts', [])[-10:]
+        return jsonify(recent_alerts)
+    except:
+        return jsonify([])
 
 def run_web_app():
     """运行Web应用"""
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5001)  # 修改为非debug模式，使用5001端口
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

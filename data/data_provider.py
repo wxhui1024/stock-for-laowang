@@ -34,10 +34,13 @@ class DataProvider:
             elif DATA_SOURCE == 'tushare':
                 return self._get_tushare_data(symbol, period, days)
             else:
-                raise ValueError(f"Unsupported data source: {DATA_SOURCE}")
+                # 默认使用akshare
+                return self._get_akshare_data(symbol, period, days)
         except Exception as e:
             logger.error(f"Error getting data for {symbol}: {str(e)}")
-            raise
+            # 返回一个空的DataFrame作为fallback
+            import pandas as pd
+            return pd.DataFrame()
     
     def _get_ashare_data(self, symbol, period, days):
         """使用Ashare风格的数据获取"""
